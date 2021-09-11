@@ -17,6 +17,8 @@ lazy val core = (project in file("./modules/core"))
  */
 lazy val commonSettings = Seq(
   scalaVersion := Versions.Scala,
+  semanticdbEnabled := true, // enable scalafix SemanticDB
+  semanticdbVersion := scalafixSemanticdb.revision,
   scalacOptions ++= Seq(
     /**
       * @see https://docs.scala-lang.org/overviews/compiler-options/index.html
@@ -34,13 +36,11 @@ lazy val commonSettings = Seq(
     "-Xfatal-warnings", // Fail the compilation if there are any warnings.
     "-Ywarn-unused:imports", // Warn when imports are unused.
     "-Ywarn-numeric-widen" // Warn when numerics are widened.
-    // @see https://github.com/scala/bug/issues/11110
-    // "-Yno-adapted-args" // Do not adapt an argument list (either by inserting () or creating a tuple) to match the receiver.
   ),
-  scalacOptions in (Compile, console) ~= (_.filterNot(Set("-Xlint", "-Ywarn-unused:imports"))),
-  testOptions in Test += Tests.Argument("-oD"),
-  fork in Test := true,
-  wartremoverErrors in (Compile, compile) := Warts.unsafe
+  Compile /console / scalacOptions ~= (_.filterNot(Set("-Xlint", "-Ywarn-unused:imports"))),
+  Test / testOptions += Tests.Argument("-oD"),
+  Test / fork := true,
+  Compile / compile / wartremoverErrors := Warts.unsafe
     .filterNot(Set(Wart.Any)) ++ Seq(
     Wart.ExplicitImplicitTypes,
     Wart.FinalCaseClass,
@@ -49,37 +49,22 @@ lazy val commonSettings = Seq(
     Wart.While
   ),
   // scaladoc: Create inheritance diagrams for classes, traits and packages.
-  scalacOptions in (Compile, doc) := Seq("-diagrams"),
+  Compile / doc / scalacOptions := Seq("-diagrams"),
 
   /**
    * @see https://github.com/sbt/sbt-assembly#merge-strategy
    */
-  assemblyMergeStrategy in assembly := {
+  assembly / assemblyMergeStrategy:= {
     case PathList(ps @ _*) if ps.last endsWith ".properties" => MergeStrategy.first
     case PathList(ps @ _*) if ps.last endsWith ".class" => MergeStrategy.first
     case x =>
-      val oldStrategy = (assemblyMergeStrategy in assembly).value
+      val oldStrategy = (assembly / assemblyMergeStrategy).value
       oldStrategy(x)
   },
-  test in assembly := {},
+  assembly / test:= {},
 )
 
 /**
  * Core Settings
  */
 lazy val coreSettings = Seq()
-
-/**
- * test
- */
-addCommandAlias("testFast", ";testOnly -- -l org.scalatest.tags.Network")
-addCommandAlias("testNetwork", ";testOnly -- -n org.scalatest.tags.Network")
-addCommandAlias("t", "testFast")
-
-/**
- * scalafmt
- */
-addCommandAlias("fmt", ";scalafmt ;test:scalafmt")
-scalafmtVersion in ThisBuild := "1.5.1"
-scalafmtTestOnCompile in ThisBuild := true
-scalafmtShowDiff in (ThisBuild, scalafmt) := true
