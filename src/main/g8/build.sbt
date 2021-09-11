@@ -71,4 +71,6 @@ lazy val commonSettings = Seq(
 /**
  * Core Settings
  */
-lazy val coreSettings = Seq()
+lazy val coreSettings = Seq(
+  libraryDependencies ++= coreDependencies ++ testDependencies
+)

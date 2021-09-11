@@ -6,6 +6,8 @@ object Versions {
 
 object Dependencies {
   val coreDependencies = Seq()
+
+  val testDependencies = Seq()
 }
 
 object Libraries {
